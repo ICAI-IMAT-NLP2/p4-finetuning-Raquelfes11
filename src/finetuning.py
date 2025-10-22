@@ -8,7 +8,7 @@ except:
     from src.utils import download_and_load_model
 
 class LoRA(nn.Module):
-    def __init__(self, original_layer, r=4, alpha=32):
+    def __init__(self, original_layer: nn.Module, r: int=4, alpha: int=32):
         """
         Low-Rank Adaptation (LoRA) module.
         
@@ -19,22 +19,23 @@ class LoRA(nn.Module):
         """
         super().__init__()
         # TODO: Initialize LoRA parameters
-        self.r = None
-        self.alpha = None
-        self.original_layer = None
+        self.r = r
+        self.alpha = alpha
+        self.original_layer = original_layer
 
         # TODO: Low-rank matrices A and B for LoRA
-        self.A = None
-        self.B = None
+        self.A = nn.Parameter(torch.empty((original_layer.weight.size(0),r)))
+        self.B = nn.Parameter(torch.empty((r, original_layer.weight.size(1))))
 
         # TODO: Initialize LoRA weights (B is zero-initialized, A is random)
-        nn.init.kaiming_uniform_(None)
+        nn.init.kaiming_uniform_(self.A)
+        nn.init.zeros_(self.B)
         
         # TODO: Scaling factor alpha 
-        self.scaling = None
+        self.scaling = alpha / r
 
         # TODO: Freeze the original layer parameters
-        for param in None:
+        for param in self.original_layer.parameters():
             param.requires_grad = False
                 
     def forward(self, x):
