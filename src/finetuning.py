@@ -82,9 +82,9 @@ class SoftPromptEmbedding(nn.Module):
         """
         super().__init__()
         # TODO: Initialize soft prompt embeddings
-        self.soft_prompt = None
+        self.soft_prompt = nn.Parameter(torch.empty([prompt_length, model_hidden_size]))
 
-    def forward(self, input_embeddings):
+    def forward(self, input_embeddings: torch.Tensor):
         """
         Forward pass to prepend soft prompts to input embeddings.
 
@@ -95,8 +95,9 @@ class SoftPromptEmbedding(nn.Module):
             torch.Tensor: The concatenated soft prompts and original embeddings.
         """
         # TODO: Expand soft prompt to match batch size
-        batch_size = None
-        soft_prompt_expanded = None
+        batch_size: int = input_embeddings.shape[0]
+        soft_prompt_expanded: torch.Tensor = self.soft_prompt.unsqueeze(0).expand((batch_size, -1, -1))
 
         # TODO: Concatenate soft prompt and input embeddings
-        return None
+        concatenated_inputs: torch.Tensor = torch.cat([soft_prompt_expanded, input_embeddings], dim=1)
+        return concatenated_inputs
