@@ -24,25 +24,28 @@ class LoRA(nn.Module):
         self.original_layer = original_layer
 
         # TODO: Low-rank matrices A and B for LoRA
-        self.A = nn.Parameter(torch.empty((original_layer.weight.size(0),r)))
-        self.B = nn.Parameter(torch.empty((r, original_layer.weight.size(1))))
+        self.A = nn.Parameter(torch.empty((self.original_layer.weight.size(0),self.r)))
+        self.B = nn.Parameter(torch.empty((self.r, self.original_layer.weight.size(1))))
 
         # TODO: Initialize LoRA weights (B is zero-initialized, A is random)
         nn.init.kaiming_uniform_(self.A)
         nn.init.zeros_(self.B)
         
         # TODO: Scaling factor alpha 
-        self.scaling = alpha / r
+        self.scaling = self.alpha / self.r
 
         # TODO: Freeze the original layer parameters
         for param in self.original_layer.parameters():
             param.requires_grad = False
                 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor):
         # TODO: Perform forward pass with low-rank update
-        return None
+        output: torch.Tensor = self.original_layer(x)
+        d_output: torch.Tensor = torch.matmul(x, (torch.matmul(self.A, self.B)))
+        lora_output: torch.Tensor = output + self.scaling * d_output
+        return lora_output
 
-def inject_lora_into_model(model, r=4, alpha=32, device='cpu'):
+def inject_lora_into_model(model: nn.Module, r=4, alpha=32, device='cpu'):
     """
     Inject LoRA layers into the linear layers of the attention modules of the model.
     
@@ -56,15 +59,15 @@ def inject_lora_into_model(model, r=4, alpha=32, device='cpu'):
         model (PreTrainedModel): The model with LoRA injected into attention layers.
     """
     # TODO: Iterate through all child modules of the model
-    for child_name, child_module in None:
+    for child_name, child_module in model.named_children():
         # TODO: Check if the child module is a linear layer of the attention module
-        if child_name.lower() in None:
+        if child_name.lower() in ["q", "k", "v", "o"]:
             # TODO: Create LoRA layer for linear module
-            lora_layer = None
+            lora_layer = LoRA(child_module, r=r, alpha=alpha)
             setattr(model, child_name, lora_layer)
         else:
             # TODO: Recursively inject LoRA into child module
-            pass
+            inject_lora_into_model(child_module, r, alpha, device)
     return model.to(device)
 
 
