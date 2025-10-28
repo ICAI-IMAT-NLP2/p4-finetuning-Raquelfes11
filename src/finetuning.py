@@ -28,7 +28,7 @@ class LoRA(nn.Module):
         self.B = nn.Parameter(torch.empty((self.r, self.original_layer.weight.size(1))))
 
         # TODO: Initialize LoRA weights (B is zero-initialized, A is random)
-        nn.init.kaiming_uniform_(self.A)
+        nn.init.kaiming_uniform_(self.A, a=math.sqrt(5))
         nn.init.zeros_(self.B)
         
         # TODO: Scaling factor alpha 
