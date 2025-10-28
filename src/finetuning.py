@@ -7,11 +7,12 @@ try:
 except:
     from src.utils import download_and_load_model
 
+
 class LoRA(nn.Module):
-    def __init__(self, original_layer: nn.Module, r: int=4, alpha: int=32):
+    def __init__(self, original_layer: nn.Module, r: int = 4, alpha: int = 32):
         """
         Low-Rank Adaptation (LoRA) module.
-        
+
         Args:
             original_layer (nn.Module): The original layer to which LoRA is applied.
             r (int): Rank of the low-rank approximation.
@@ -24,20 +25,20 @@ class LoRA(nn.Module):
         self.original_layer = original_layer
 
         # TODO: Low-rank matrices A and B for LoRA
-        self.A = nn.Parameter(torch.empty((self.original_layer.weight.size(0),self.r)))
+        self.A = nn.Parameter(torch.empty((self.original_layer.weight.size(0), self.r)))
         self.B = nn.Parameter(torch.empty((self.r, self.original_layer.weight.size(1))))
 
         # TODO: Initialize LoRA weights (B is zero-initialized, A is random)
         nn.init.kaiming_uniform_(self.A, a=math.sqrt(5))
         nn.init.zeros_(self.B)
-        
-        # TODO: Scaling factor alpha 
+
+        # TODO: Scaling factor alpha
         self.scaling = self.alpha / self.r
 
         # TODO: Freeze the original layer parameters
         for param in self.original_layer.parameters():
             param.requires_grad = False
-                
+
     def forward(self, x: torch.Tensor):
         # TODO: Perform forward pass with low-rank update
         output: torch.Tensor = self.original_layer(x)
@@ -45,16 +46,17 @@ class LoRA(nn.Module):
         lora_output: torch.Tensor = output + self.scaling * d_output
         return lora_output
 
-def inject_lora_into_model(model: nn.Module, r=4, alpha=32, device='cpu'):
+
+def inject_lora_into_model(model: nn.Module, r=4, alpha=32, device="cpu"):
     """
     Inject LoRA layers into the linear layers of the attention modules of the model.
-    
+
     Args:
         model (PreTrainedModel): The pre-trained model.
         r (int): Rank of the low-rank approximation.
         alpha (int): Scaling factor for LoRA.
         device (torch.device): The device to run the model on ('cuda' or 'cpu').
-    
+
     Returns:
         model (PreTrainedModel): The model with LoRA injected into attention layers.
     """
@@ -96,8 +98,12 @@ class SoftPromptEmbedding(nn.Module):
         """
         # TODO: Expand soft prompt to match batch size
         batch_size: int = input_embeddings.shape[0]
-        soft_prompt_expanded: torch.Tensor = self.soft_prompt.unsqueeze(0).expand((batch_size, -1, -1))
+        soft_prompt_expanded: torch.Tensor = self.soft_prompt.unsqueeze(0).expand(
+            (batch_size, -1, -1)
+        )
 
         # TODO: Concatenate soft prompt and input embeddings
-        concatenated_inputs: torch.Tensor = torch.cat([soft_prompt_expanded, input_embeddings], dim=1)
+        concatenated_inputs: torch.Tensor = torch.cat(
+            [soft_prompt_expanded, input_embeddings], dim=1
+        )
         return concatenated_inputs
